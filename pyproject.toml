@@ -49,6 +49,6 @@ dev = [
 mcp-sentinel = "mcp_sentinel.cli:main"
 
 [project.urls]
-Homepage = "https://github.com"
-Repository = "https://github.com"
-Issues = "https://github.com/issues"
+Homepage = "https://github.com/businesscanva12-tech/mcp-sentinel"
+Repository = "https://github.com/businesscanva12-tech/mcp-sentinel"
+Issues = "https://github.com/businesscanva12-tech/mcp-sentinel/issues"

@@ -1,6 +1,6 @@
 # MCP Sentinel 🛡️
 
-[![CI](https://github.com/username/mcp-sentinel/actions/workflows/ci.yml/badge.svg)](https://github.com/username/mcp-sentinel/actions)
+[![CI](https://github.com/businesscanva12-tech/mcp-sentinel/actions/workflows/ci.yml/badge.svg)](https://github.com/businesscanva12-tech/mcp-sentinel/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![Protocol: MCP](https://img.shields.io/badge/Protocol-MCP-orange.svg)](https://modelcontextprotocol.io/)
@@ -29,7 +29,7 @@ As autonomous AI agents read, refactor, and commit large codebases, they risk ac
 Clone the repository and install in editable mode:
 
 ```bash
-git clone https://github.com/<your-username>/mcp-sentinel.git
+git clone https://github.com/businesscanva12-tech/mcp-sentinel.git
 cd mcp-sentinel
 python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
