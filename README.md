@@ -2,23 +2,25 @@
 
 [![CI](https://github.com/businesscanva12-tech/mcp-sentinel/actions/workflows/ci.yml/badge.svg)](https://github.com/businesscanva12-tech/mcp-sentinel/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Version: v0.2.0](https://img.shields.io/badge/version-0.2.0-brightgreen.svg)](https://github.com/businesscanva12-tech/mcp-sentinel/releases)
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![Protocol: MCP](https://img.shields.io/badge/Protocol-MCP-orange.svg)](https://modelcontextprotocol.io/)
+[![SARIF v2.1.0](https://img.shields.io/badge/SARIF-v2.1.0-blueviolet.svg)](https://docs.github.com/en/code-security/code-scanning)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-**MCP Sentinel** is a lightweight, high-performance [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server and CLI tool designed to act as an automated security and secret guardrail for AI coding assistants like **Claude Code**, **Claude Desktop**, and agentic IDEs.
+**MCP Sentinel** is a high-performance [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) security server and CLI tool designed as an automated safety & secret guardrail for **Claude Code**, **Claude Desktop**, and autonomous AI coding agents.
 
-As autonomous AI agents read, refactor, and commit large codebases, they risk accidentally persisting sensitive environment variables, hardcoded API keys (Anthropic, OpenAI, AWS, GitHub), or generating insecure dynamic evaluation constructs (`eval`, `exec`, unescaped `os.system`). **MCP Sentinel** provides real-time verification before changes are finalized.
+As autonomous AI agents read, refactor, and commit large codebases, they risk accidentally persisting sensitive environment variables, hardcoded API keys (Anthropic, OpenAI, HuggingFace, Stripe, AWS, GitHub), or generating dangerous dynamic execution patterns (`eval`, `exec`, unescaped `os.system`). **MCP Sentinel** verifies every patch and workspace in real time before changes hit disk or production.
 
 ---
 
-## 🌟 Key Features
+## 🌟 What's New in v0.2.0
 
-- 🔑 **Real-time Secret Detection**: Instant regex-based & entropy-based identification of exposed API keys, private keys, and OAuth tokens.
-- 🔬 **Python AST Safety Audit**: Inspects abstract syntax trees to flag dangerous dynamic execution patterns (`eval`, `exec`, insecure `subprocess` calls) before writing to disk.
-- 📐 **Shannon Entropy Analysis**: Distinguishes between plain text and high-entropy cryptographically generated secrets to reduce false positives.
-- 🔌 **Native MCP Integration**: Implements the Model Context Protocol stdio transport for frictionless plug-and-play setup with Claude Code and Claude Desktop.
-- ⚡ **Zero-Friction CLI**: Can also be executed directly as a terminal utility (`mcp-sentinel scan .`) or integrated into CI/CD pipelines and pre-commit hooks.
+- 🌐 **25+ Secret & Cloud Providers**: Full detection coverage for Anthropic, OpenAI, Hugging Face, GitHub Fine-Grained PATs, GitLab, AWS, Google Cloud, Azure Storage, Stripe, Slack, Discord, SendGrid, Supabase, and private key blocks.
+- 📊 **OASIS SARIF v2.1.0 Export**: Direct integration with GitHub Code Scanning, allowing automated vulnerability tabs on GitHub Pull Requests.
+- ⚡ **High-Speed Concurrent Scanner**: Multi-threaded parallel file auditing capable of scanning thousands of files in milliseconds.
+- 🪝 **Pre-Commit Hook Integration**: Ready-to-use `.pre-commit-hooks.yaml` for pre-commit and pre-push stages.
+- 🛠️ **4 Native MCP Tools**: Extended agent toolkit with `scan_code_security`, `check_token_entropy`, `audit_repository_security`, and `generate_sarif_report`.
 
 ---
 
@@ -60,32 +62,50 @@ Add **mcp-sentinel** to your `claude_desktop_config.json`:
 
 ### 2. Claude Code CLI Setup
 
-You can register Sentinel directly within your Claude Code environment:
+Register Sentinel directly into your Claude Code workspace:
 
 ```bash
 claude mcp add sentinel python -m mcp_sentinel.cli serve
 ```
 
-Once registered, Claude can call `scan_code_security` and `check_token_entropy` tools during code generation and file edits.
-
 ---
 
 ## 💻 CLI Usage
 
-You can also use Sentinel independently from the terminal:
+Sentinel can be used directly from your terminal or CI/CD pipelines:
 
-### Scan a file or project directory
+### Standard Scan
 ```bash
-# Scan current directory
+# Scan current repository
 mcp-sentinel scan .
 
-# Scan a specific file
-mcp-sentinel scan src/config.py
+# Scan with 16 parallel threads
+mcp-sentinel scan . --workers 16
+```
+
+### Export to SARIF for GitHub Code Scanning
+```bash
+# Generate SARIF report for GitHub Actions
+mcp-sentinel scan . --format sarif -o report.sarif
 ```
 
 ### Run as an MCP Server
 ```bash
 mcp-sentinel serve
+```
+
+---
+
+## 🪝 Pre-Commit Hook Configuration
+
+Add MCP Sentinel to your `.pre-commit-config.yaml`:
+
+```yaml
+repos:
+  - repo: https://github.com/businesscanva12-tech/mcp-sentinel
+    rev: v0.2.0
+    hooks:
+      - id: mcp-sentinel
 ```
 
 ---
@@ -97,15 +117,6 @@ Sentinel includes a comprehensive test suite covering pattern recognition, Shann
 ```bash
 python -m unittest discover -s tests
 ```
-
----
-
-## 🗺️ Roadmap
-
-- [ ] Support for SARIF (Static Analysis Results Interchange Format) export.
-- [ ] Integration with Gitleaks rulesets for custom corporate patterns.
-- [ ] Pre-commit hook template (`.pre-commit-hooks.yaml`).
-- [ ] Semantic AST taint analysis for JavaScript/TypeScript targets.
 
 ---
 

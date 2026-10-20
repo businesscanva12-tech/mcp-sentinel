@@ -2,13 +2,21 @@
 Scanner engine for credentials, high-entropy tokens, and dangerous AST structures.
 """
 
-from typing import List, Optional
-from pydantic import BaseModel, Field
+from typing import List, Optional, Set
+from pydantic import BaseModel
+from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
 import math
 import re
 import ast
+import os
 
 from .rules import PATTERNS, DANGEROUS_AST_CALLS
+
+DEFAULT_IGNORED_DIRS: Set[str] = {
+    ".git", "__pycache__", ".venv", "venv", "env", "node_modules",
+    "dist", "build", ".pytest_cache", ".ruff_cache", ".idea", ".vscode"
+}
 
 
 class Finding(BaseModel):
@@ -111,3 +119,40 @@ def audit_python_ast(content: str, file_path: Optional[str] = None) -> List[Find
         return visitor.findings
     except SyntaxError:
         return []
+
+
+def scan_file(file_path: Path) -> List[Finding]:
+    """Scans an individual file for secrets and unsafe AST calls."""
+    try:
+        content = file_path.read_text(encoding="utf-8", errors="ignore")
+    except Exception:
+        return []
+
+    findings = scan_secrets(content, file_path=str(file_path))
+    if file_path.suffix == ".py":
+        findings += audit_python_ast(content, file_path=str(file_path))
+    return findings
+
+
+def scan_directory_parallel(directory_path: str, max_workers: int = 8) -> List[Finding]:
+    """Scans an entire directory tree concurrently using ThreadPoolExecutor."""
+    path = Path(directory_path)
+    if not path.exists():
+        return []
+
+    files_to_scan: List[Path] = []
+    if path.is_file():
+        files_to_scan.append(path)
+    else:
+        for root, dirs, files in os.walk(path):
+            dirs[:] = [d for d in dirs if d not in DEFAULT_IGNORED_DIRS]
+            for file in files:
+                files_to_scan.append(Path(root) / file)
+
+    all_findings: List[Finding] = []
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        results = executor.map(scan_file, files_to_scan)
+        for res in results:
+            all_findings.extend(res)
+
+    return all_findings

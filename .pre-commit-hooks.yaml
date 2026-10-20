@@ -1,0 +1,7 @@
+- id: mcp-sentinel
+  name: MCP Sentinel Security Scan
+  description: Scan files for hardcoded secrets, API keys, and insecure AST constructs
+  entry: mcp-sentinel scan
+  language: python
+  types: [text]
+  stages: [pre-commit, pre-push]

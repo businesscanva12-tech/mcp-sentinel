@@ -6,13 +6,15 @@ from typing import Any, Dict, List
 import sys
 import json
 import os
+from pathlib import Path
 
-from .scanner import scan_secrets, audit_python_ast, calculate_shannon_entropy
+from .scanner import scan_secrets, audit_python_ast, calculate_shannon_entropy, scan_directory_parallel
+from .sarif import generate_sarif_report
 
 
 def run_stdio_server():
     """Runs a Model Context Protocol compatible JSON-RPC stdio loop."""
-    sys.stderr.write("Starting MCP Sentinel Security Server...\n")
+    sys.stderr.write("Starting MCP Sentinel Security Server v0.2.0...\n")
     sys.stderr.flush()
 
     while True:
@@ -40,7 +42,7 @@ def run_stdio_server():
                         },
                         "serverInfo": {
                             "name": "mcp-sentinel",
-                            "version": "0.1.0"
+                            "version": "0.2.0"
                         }
                     }
                 }
@@ -71,6 +73,26 @@ def run_stdio_server():
                                         "token": {"type": "string", "description": "The candidate token to inspect"}
                                     },
                                     "required": ["token"]
+                                }
+                            },
+                            {
+                                "name": "audit_repository_security",
+                                "description": "High-speed parallel scan across the entire workspace/repository to detect hardcoded credentials and dangerous AST calls.",
+                                "inputSchema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "directory": {"type": "string", "description": "Directory path to audit (defaults to current dir)"}
+                                    }
+                                }
+                            },
+                            {
+                                "name": "generate_sarif_report",
+                                "description": "Generate an OASIS SARIF v2.1.0 security report for the workspace, compatible with GitHub Code Scanning.",
+                                "inputSchema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "directory": {"type": "string", "description": "Directory path to audit (defaults to current dir)"}
+                                    }
                                 }
                             }
                         ]
@@ -127,6 +149,43 @@ def run_stdio_server():
                                         "is_high_entropy": is_suspicious,
                                         "recommendation": "Potential secret key" if is_suspicious else "Normal text"
                                     }, indent=2)
+                                }
+                            ]
+                        }
+                    }
+                elif tool_name == "audit_repository_security":
+                    directory = args.get("directory", ".")
+                    findings = scan_directory_parallel(directory)
+                    findings_data = [f.model_dump() for f in findings]
+                    response = {
+                        "jsonrpc": "2.0",
+                        "id": msg_id,
+                        "result": {
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": json.dumps({
+                                        "directory": directory,
+                                        "status": "clean" if not findings_data else "findings_detected",
+                                        "total_findings": len(findings_data),
+                                        "findings": findings_data
+                                    }, indent=2)
+                                }
+                            ]
+                        }
+                    }
+                elif tool_name == "generate_sarif_report":
+                    directory = args.get("directory", ".")
+                    findings = scan_directory_parallel(directory)
+                    sarif_json = generate_sarif_report(findings, tool_version="0.2.0")
+                    response = {
+                        "jsonrpc": "2.0",
+                        "id": msg_id,
+                        "result": {
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": json.dumps(sarif_json, indent=2)
                                 }
                             ]
                         }
